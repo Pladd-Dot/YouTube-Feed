@@ -24,7 +24,7 @@ export default function SnippetGenerator({ config }) {
     duration: config.showDuration ? '1' : '0'
   }).toString();
 
-  const embedUrl = `${baseUrl}/embed.html?${queryParams}`;
+  const embedUrl = `${baseUrl}/public/embed.html?${queryParams}`;
 
   // 1. iFrame Snippet Format
   const iframeCode = `<!-- YouTube Video Feed Grid Embed -->
@@ -40,7 +40,7 @@ export default function SnippetGenerator({ config }) {
 
   // 2. Web Component Script Format
   const scriptCode = `<!-- YouTube Feed Web Component -->
-<script src="${baseUrl}/widget.js" async></script>
+<script src="${baseUrl}/public/widget.js" async></script>
 <yt-feed-grid
   ${config.apiKey ? `api-key="${config.apiKey}"` : ''}
   channel-id="${config.channelId || 'DEMO'}"
