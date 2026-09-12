@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Feed Embed Widget</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #090d16;
+      --bg-card: #121827;
+      --bg-input: #1a2338;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --accent-color: #6366f1;
+      --accent-red: #ff0000;
+    }
+
+    [data-theme='light'] {
+      --bg-main: #ffffff;
+      --bg-card: #f8fafc;
+      --bg-input: #e2e8f0;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --border-subtle: rgba(0, 0, 0, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-main);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+
+    /* Search & Filter Header */
+    .search-wrapper {
+      display: flex;
+      gap: 0.75rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 0.65rem 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .search-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      width: 100%;
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      gap: 1rem;
+    }
+    .cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+    @media (max-width: 768px) {
+      .cols-3, .cols-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .cols-2, .cols-3, .cols-4 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-color);
+    }
+
+    .thumb {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .badge {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+
+    .info {
+      padding: 0.85rem;
+    }
+
+    .title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 0.4rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Modal Player */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal.active { display: flex; }
+    .modal-inner {
+      background: var(--bg-card);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 800px;
+      overflow: hidden;
+    }
+    .modal-player {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+    }
+    .modal-player iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .modal-close {
+      padding: 0.5rem 1rem;
+      background: var(--bg-input);
+      border: none;
+      color: var(--text-primary);
+      cursor: pointer;
+      font-weight: bold;
+      float: right;
+      margin: 0.5rem;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div id="search-box" class="search-wrapper">
+    <input type="text" id="search-input" class="search-input" placeholder="Search videos...">
+  </div>
+
+  <div id="video-grid" class="grid cols-3"></div>
+
+  <div id="player-modal" class="modal">
+    <div class="modal-inner">
+      <button class="modal-close" onclick="closeModal()">Close ✕</button>
+      <div className="modal-player" id="modal-player-box"></div>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const cols = params.get('cols') || '3';
+    const theme = params.get('theme') || 'dark';
+    const color = params.get('color') ? decodeURIComponent(params.get('color')) : '#6366f1';
+    const showSearch = params.get('search') !== '0';
+    const showViews = params.get('views') !== '0';
+    const showDuration = params.get('duration') !== '0';
+
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.style.setProperty('--accent-color', color);
+
+    if (!showSearch) {
+      document.getElementById('search-box').style.display = 'none';
+    }
+
+    const grid = document.getElementById('video-grid');
+    grid.className = `grid cols-${cols}`;
+
+    const MOCK_VIDEOS = [
+      { id: "bMknfKXIFA8", title: "React Course 2026 - Beginner to Pro Project Walkthrough", thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=800&auto=format&fit=crop", views: "142.5K views", duration: "18:42" },
+      { id: "Ke90Tje7VS0", title: "Building Modern Web Apps with Vite, React & Tailwind CSS", thumbnail: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop", views: "89.2K views", duration: "24:15" },
+      { id: "rfscVS0vtbw", title: "10 JavaScript Tips Every Developer Must Know in 2026", thumbnail: "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?q=80&w=800&auto=format&fit=crop", views: "215K views", duration: "12:08" },
+      { id: "SqcY0GlETPk", title: "CSS Grid vs Flexbox - Complete Visual Guide", thumbnail: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?q=80&w=800&auto=format&fit=crop", views: "64.8K views", duration: "15:30" },
+      { id: "dQw4w9WgXcQ", title: "Fullstack Web Development Roadmap & Tech Stack 2026", thumbnail: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800&auto=format&fit=crop", views: "340.1K views", duration: "32:50" },
+      { id: "LDB4uaJ87e0", title: "Mastering REST APIs & Fetch / Axios in JavaScript", thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop", views: "98.4K views", duration: "21:10" }
+    ];
+
+    function render(videos) {
+      grid.innerHTML = videos.map(v => `
+        <div class="card" onclick="openModal('${v.id}')">
+          <div class="thumb">
+            <img src="${v.thumbnail}" alt="${v.title}">
+            ${showDuration ? `<span class="badge">${v.duration}</span>` : ''}
+          </div>
+          <div class="info">
+            <h4 class="title">${v.title}</h4>
+            ${showViews ? `<div class="meta">${v.views}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    render(MOCK_VIDEOS);
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      const filtered = MOCK_VIDEOS.filter(v => v.title.toLowerCase().includes(q));
+      render(filtered);
+    });
+
+    function openModal(id) {
+      const modal = document.getElementById('player-modal');
+      const box = document.getElementById('modal-player-box');
+      box.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('player-modal');
+      document.getElementById('modal-player-box').innerHTML = '';
+      modal.classList.remove('active');
+    }
+  </script>
+</body>
+</html>
