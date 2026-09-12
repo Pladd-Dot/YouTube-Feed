@@ -222,6 +222,29 @@
 
     let loadedVideos = [];
 
+    function parseDuration(durationStr) {
+      if (!durationStr) return "";
+      const match = durationStr.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      if (!match) return "";
+      const hours = parseInt(match[1] || 0, 10);
+      const minutes = parseInt(match[2] || 0, 10);
+      const seconds = parseInt(match[3] || 0, 10);
+      const secFormatted = seconds < 10 ? `0${seconds}` : `${seconds}`;
+      if (hours > 0) {
+        const minFormatted = minutes < 10 ? `0${minutes}` : `${minutes}`;
+        return `${hours}:${minFormatted}:${secFormatted}`;
+      }
+      return `${minutes}:${secFormatted}`;
+    }
+
+    function formatViews(viewsStr) {
+      if (!viewsStr) return "";
+      const num = parseInt(viewsStr, 10);
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + "M views";
+      if (num >= 1000) return (num / 1000).toFixed(1) + "K views";
+      return num + " views";
+    }
+
     function render(videos) {
       if (!videos || videos.length === 0) {
         grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">No videos found.</div>`;
@@ -243,28 +266,41 @@
     }
 
     async function loadData() {
-      if (apiKey && channelId && channelId.trim() !== '' && channelId !== 'DEMO') {
+      if (apiKey && apiKey.trim() !== '' && channelId && channelId.trim() !== '' && channelId !== 'DEMO') {
         try {
+          // 1. Fetch channel videos via YouTube search endpoint
           const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${encodeURIComponent(apiKey.trim())}&channelId=${encodeURIComponent(channelId.trim())}&part=snippet,id&order=date&maxResults=${maxResults}&type=video`;
           const res = await fetch(searchUrl);
-          const data = await res.json();
-          if (data.items && data.items.length > 0) {
-            loadedVideos = data.items.map(item => ({
-              id: item.id.videoId,
-              title: item.snippet.title,
-              thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
-              views: new Date(item.snippet.publishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
-              duration: ""
-            }));
-            render(loadedVideos);
-            return;
+          const searchData = await res.json();
+
+          if (searchData.items && searchData.items.length > 0) {
+            const videoIds = searchData.items.map(i => i.id?.videoId).filter(Boolean).join(",");
+
+            if (videoIds) {
+              // 2. Fetch video details (duration, views, high-res thumbnails)
+              const statsUrl = `https://www.googleapis.com/youtube/v3/videos?key=${encodeURIComponent(apiKey.trim())}&id=${videoIds}&part=snippet,statistics,contentDetails`;
+              const statsRes = await fetch(statsUrl);
+              const statsData = await statsRes.json();
+
+              if (statsData.items && statsData.items.length > 0) {
+                loadedVideos = statsData.items.map(item => ({
+                  id: item.id,
+                  title: item.snippet.title,
+                  thumbnail: item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
+                  views: formatViews(item.statistics?.viewCount) || new Date(item.snippet.publishedAt).toLocaleDateString(),
+                  duration: parseDuration(item.contentDetails?.duration)
+                }));
+                render(loadedVideos);
+                return;
+              }
+            }
           }
         } catch (e) {
           console.error("YouTube API Fetch Error:", e);
         }
       }
 
-      // Fallback to Demo Mode Mock Data
+      // Fallback to Demo Mode Mock Data if key/channel missing or error occurs
       loadedVideos = MOCK_VIDEOS.slice(0, parseInt(maxResults, 10));
       render(loadedVideos);
     }
