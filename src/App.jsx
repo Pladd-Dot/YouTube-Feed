@@ -119,7 +119,6 @@ export default function App() {
 
   // Filter & Search state inside live preview
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
 
   // Video feed data state
@@ -164,14 +163,9 @@ export default function App() {
     };
   }, [config.apiKey, config.channelId, config.maxResults, searchQuery]);
 
-  // Filter and Sort local video results
+  // Sort local video results
   const processedVideos = React.useMemo(() => {
     let list = [...videos];
-
-    // Filter by Category Tag
-    if (selectedCategory !== 'All') {
-      list = list.filter((v) => v.category?.toLowerCase() === selectedCategory.toLowerCase());
-    }
 
     // Sort Videos
     if (sortBy === 'newest') {
@@ -180,14 +174,14 @@ export default function App() {
       list.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
     } else if (sortBy === 'popular') {
       list.sort((a, b) => {
-        const viewsA = parseInt(a.views.replace(/[^0-9]/g, '') || '0', 10);
-        const viewsB = parseInt(b.views.replace(/[^0-9]/g, '') || '0', 10);
+        const viewsA = parseInt((a.views || '').replace(/[^0-9]/g, '') || '0', 10);
+        const viewsB = parseInt((b.views || '').replace(/[^0-9]/g, '') || '0', 10);
         return viewsB - viewsA;
       });
     }
 
     return list;
-  }, [videos, selectedCategory, sortBy]);
+  }, [videos, sortBy]);
 
   return (
     <div className="app-container">
@@ -220,10 +214,7 @@ export default function App() {
               <button
                 type="button"
                 className="btn-toggle"
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('All');
-                }}
+                onClick={() => setSearchQuery('')}
                 style={{ fontSize: '0.78rem', padding: '0.35rem 0.65rem' }}
               >
                 <RefreshCw size={12} /> Reset Filters
@@ -240,8 +231,6 @@ export default function App() {
                   <SearchBar
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
-                    selectedCategory={selectedCategory}
-                    setSelectedCategory={setSelectedCategory}
                     sortBy={sortBy}
                     setSortBy={setSortBy}
                     accentColor={config.accentColor}

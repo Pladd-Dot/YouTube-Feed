@@ -1,19 +1,15 @@
 import React from 'react';
-import { Search, Filter, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 export default function SearchBar({
   searchQuery,
   setSearchQuery,
-  selectedCategory,
-  setSelectedCategory,
   sortBy,
   setSortBy,
   accentColor
 }) {
-  const CATEGORIES = ['All', 'React', 'JavaScript', 'Web Dev', 'CSS', 'APIs'];
-
   return (
-    <div className="yt-search-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+    <div className="yt-search-container">
       <div className="widget-search-bar" style={{ '--accent-color': accentColor }}>
         <Search size={18} style={{ color: 'var(--text-muted)' }} />
         <input
@@ -27,7 +23,8 @@ export default function SearchBar({
           <button
             type="button"
             onClick={() => setSearchQuery('')}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            aria-label="Clear search"
           >
             <X size={16} />
           </button>
@@ -41,19 +38,6 @@ export default function SearchBar({
           <option value="popular">Most Popular</option>
           <option value="oldest">Oldest First</option>
         </select>
-      </div>
-
-      <div className="widget-tags" style={{ '--accent-color': accentColor }}>
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            type="button"
-            className={`tag-chip ${selectedCategory === cat ? 'active' : ''}`}
-            onClick={() => setSelectedCategory(cat)}
-          >
-            {cat}
-          </button>
-        ))}
       </div>
     </div>
   );
