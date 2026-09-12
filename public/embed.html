@@ -7,34 +7,37 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-main: #090d16;
+      --bg-main: transparent;
       --bg-card: #121827;
       --bg-input: #1a2338;
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
-      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-subtle: rgba(255, 255, 255, 0.12);
       --accent-color: #6366f1;
       --accent-red: #ff0000;
     }
 
     [data-theme='light'] {
-      --bg-main: #f8fafc;
+      --bg-main: transparent;
       --bg-card: #ffffff;
-      --bg-input: #e2e8f0;
+      --bg-input: #f1f5f9;
       --text-primary: #0f172a;
       --text-secondary: #475569;
       --text-muted: #94a3b8;
-      --border-subtle: rgba(0, 0, 0, 0.08);
+      --border-subtle: #e2e8f0;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg-main);
+    html, body {
+      background: transparent;
       color: var(--text-primary);
       font-family: 'Plus Jakarta Sans', sans-serif;
-      padding: 1.25rem;
-      min-height: 100vh;
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
     }
 
     /* Scrollbar */
@@ -45,25 +48,26 @@
       background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(0, 0, 0, 0.18);
       border-radius: 4px;
     }
     [data-theme='dark'] ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.18);
     }
 
-    /* Outer Container Frame - Scrollable */
+    /* Single Clean Rounded Container Frame */
     .widget-container {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      padding: 1.25rem;
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
-      max-height: 680px;
+      height: 100vh;
+      width: 100%;
       overflow-y: auto;
+      box-sizing: border-box;
     }
 
     /* Search & Filter Header */
@@ -152,7 +156,7 @@
     .card:hover {
       transform: translateY(-4px);
       border-color: var(--accent-color);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
     }
 
     .thumb {

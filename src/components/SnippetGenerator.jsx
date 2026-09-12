@@ -32,7 +32,7 @@ export default function SnippetGenerator({ config }) {
   src="${embedUrl}"
   width="100%"
   height="720"
-  style="border: none; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden;"
+  style="border: none; border-radius: 16px; overflow: hidden;"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowfullscreen
   loading="lazy">
