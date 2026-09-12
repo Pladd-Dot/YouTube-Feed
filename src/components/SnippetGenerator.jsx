@@ -26,17 +26,22 @@ export default function SnippetGenerator({ config }) {
 
   const embedUrl = `${baseUrl}/public/feed.html?${queryParams}`;
 
+  const borderColor = config.theme === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0';
+  const bgColor = config.theme === 'dark' ? '#121827' : '#ffffff';
+
   // 1. iFrame Snippet Format
   const iframeCode = `<!-- YouTube Video Feed Grid Embed -->
-<iframe
-  src="${embedUrl}"
-  width="100%"
-  height="720"
-  style="border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowfullscreen
-  loading="lazy">
-</iframe>`;
+<div style="border: 1px solid ${borderColor}; border-radius: 16px; overflow: hidden; background: ${bgColor}; width: 100%;">
+  <iframe
+    src="${embedUrl}"
+    width="100%"
+    height="720"
+    style="border: none; width: 100%; height: 720px; display: block; background: transparent;"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    loading="lazy">
+  </iframe>
+</div>`;
 
   // 2. Web Component Script Format
   const scriptCode = `<!-- YouTube Feed Web Component -->
