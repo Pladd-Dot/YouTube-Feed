@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { Code, Copy, Check, Info, FileCode, Layers } from 'lucide-react';
+import { Code, Copy, Check, Info, Layers, FileCode, Globe, Monitor } from 'lucide-react';
 
 export default function SnippetGenerator({ config }) {
   const [activeTab, setActiveTab] = useState('iframe');
+  const [useLiveUrl, setUseLiveUrl] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://your-app-domain.com';
+  const LIVE_DOMAIN = 'https://pladd-dot.github.io/YouTube-Feed';
+  const LOCAL_DOMAIN = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+
+  const baseUrl = useLiveUrl ? LIVE_DOMAIN : LOCAL_DOMAIN;
 
   // Construct Query String for Embed
   const queryParams = new URLSearchParams({
@@ -23,7 +27,7 @@ export default function SnippetGenerator({ config }) {
   const embedUrl = `${baseUrl}/embed.html?${queryParams}`;
 
   // 1. iFrame Snippet Format
-  const iframeCode = `<-- YouTube Video Feed Grid Embed -->
+  const iframeCode = `<!-- YouTube Video Feed Grid Embed -->
 <iframe
   src="${embedUrl}"
   width="100%"
@@ -63,19 +67,40 @@ export default function SnippetGenerator({ config }) {
           <h3 className="snippet-title">Generated Code Snippet</h3>
         </div>
 
-        <div className="tabs-group">
-          <button
-            className={`tab-btn ${activeTab === 'iframe' ? 'active' : ''}`}
-            onClick={() => setActiveTab('iframe')}
-          >
-            <Layers size={14} style={{ display: 'inline', marginRight: '4px' }} /> iFrame Embed
-          </button>
-          <button
-            className={`tab-btn ${activeTab === 'script' ? 'active' : ''}`}
-            onClick={() => setActiveTab('script')}
-          >
-            <FileCode size={14} style={{ display: 'inline', marginRight: '4px' }} /> Web Component
-          </button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {/* Domain Mode Switcher */}
+          <div className="tabs-group">
+            <button
+              className={`tab-btn ${useLiveUrl ? 'active' : ''}`}
+              onClick={() => setUseLiveUrl(true)}
+              title="Use Live GitHub Pages Domain"
+            >
+              <Globe size={13} style={{ display: 'inline', marginRight: '4px' }} /> Live Domain
+            </button>
+            <button
+              className={`tab-btn ${!useLiveUrl ? 'active' : ''}`}
+              onClick={() => setUseLiveUrl(false)}
+              title="Use Localhost URL for local testing"
+            >
+              <Monitor size={13} style={{ display: 'inline', marginRight: '4px' }} /> Localhost
+            </button>
+          </div>
+
+          {/* Snippet Format Switcher */}
+          <div className="tabs-group">
+            <button
+              className={`tab-btn ${activeTab === 'iframe' ? 'active' : ''}`}
+              onClick={() => setActiveTab('iframe')}
+            >
+              <Layers size={14} style={{ display: 'inline', marginRight: '4px' }} /> iFrame Embed
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'script' ? 'active' : ''}`}
+              onClick={() => setActiveTab('script')}
+            >
+              <FileCode size={14} style={{ display: 'inline', marginRight: '4px' }} /> Web Component
+            </button>
+          </div>
         </div>
       </div>
 
@@ -86,14 +111,14 @@ export default function SnippetGenerator({ config }) {
             <span className="code-dot yellow" />
             <span className="code-dot green" />
           </div>
-          <span>{activeTab === 'iframe' ? 'HTML iFrame Snippet' : 'JS Script Tag'}</span>
+          <span>{useLiveUrl ? 'Live Production URL' : 'Localhost URL'} • {activeTab === 'iframe' ? 'HTML iFrame Snippet' : 'JS Script Tag'}</span>
           <button
             className={`copy-btn ${copied ? 'copied' : ''}`}
             onClick={handleCopy}
           >
             {copied ? (
               <>
-                <Check size={14} /> Copied to Clipboard!
+                <Check size={14} /> Copied Snippet!
               </>
             ) : (
               <>
@@ -111,7 +136,7 @@ export default function SnippetGenerator({ config }) {
       <div className="instruction-box">
         <Info size={18} />
         <div>
-          <strong>How to paste on any website:</strong> Copy the code snippet above and paste it directly into an <em>Custom HTML Block</em>, <em>Embed Widget</em>, or <em>Page Code Header</em> in WordPress, Webflow, Squarespace, Shopify, or any HTML file.
+          <strong>Live Embed Ready:</strong> Your snippet is set to feed from <code>{baseUrl}</code>. Paste this code into WordPress, Webflow, Squarespace, Shopify, or any HTML website to display your YouTube feed live to visitors!
         </div>
       </div>
     </div>
