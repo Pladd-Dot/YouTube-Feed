@@ -24,7 +24,7 @@ export default function SnippetGenerator({ config }) {
     duration: config.showDuration ? '1' : '0'
   }).toString();
 
-  const embedUrl = `${baseUrl}/public/embed.html?${queryParams}`;
+  const embedUrl = `${baseUrl}/public/feed.html?${queryParams}`;
 
   // 1. iFrame Snippet Format
   const iframeCode = `<!-- YouTube Video Feed Grid Embed -->
