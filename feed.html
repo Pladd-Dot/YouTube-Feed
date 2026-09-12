@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-main: transparent;
+      --bg-main: #121827;
       --bg-card: #121827;
       --bg-input: #1a2338;
       --text-primary: #f8fafc;
@@ -19,7 +19,7 @@
     }
 
     [data-theme='light'] {
-      --bg-main: transparent;
+      --bg-main: #ffffff;
       --bg-card: #ffffff;
       --bg-input: #f1f5f9;
       --text-primary: #0f172a;
@@ -30,11 +30,11 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
-      background: transparent;
+      background: var(--bg-card);
       color: var(--text-primary);
       font-family: 'Plus Jakarta Sans', sans-serif;
       height: 100vh;
-      width: 100vw;
+      width: 100%;
       margin: 0;
       padding: 0;
       overflow: hidden;
@@ -55,11 +55,9 @@
       background: rgba(255, 255, 255, 0.18);
     }
 
-    /* Single Clean Rounded Container Frame */
+    /* Seamless Container Frame */
     .widget-container {
       background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 16px;
       padding: 1.25rem;
       display: flex;
       flex-direction: column;
