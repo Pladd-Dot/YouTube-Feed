@@ -18,7 +18,7 @@ export default function SnippetGenerator({ config }) {
     cols: config.columns,
     max: config.maxResults,
     theme: config.theme,
-    color: encodeURIComponent(config.accentColor),
+    color: config.accentColor,
     search: config.showSearch ? '1' : '0',
     views: config.showViews ? '1' : '0',
     duration: config.showDuration ? '1' : '0'

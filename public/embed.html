@@ -173,6 +173,17 @@
       margin: 0.5rem;
       border-radius: 6px;
     }
+
+    .error-banner {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #ef4444;
+      padding: 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      grid-column: 1 / -1;
+    }
   </style>
 </head>
 <body>
@@ -245,9 +256,14 @@
       return num + " views";
     }
 
-    function render(videos) {
+    function render(videos, errorMsg) {
+      if (errorMsg) {
+        grid.innerHTML = `<div class="error-banner">⚠️ YouTube API Error: ${errorMsg}</div>`;
+        return;
+      }
+
       if (!videos || videos.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">No videos found.</div>`;
+        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">No videos found for this channel.</div>`;
         return;
       }
 
@@ -273,6 +289,11 @@
           const res = await fetch(searchUrl);
           const searchData = await res.json();
 
+          if (searchData.error) {
+            render(null, searchData.error.message || "Failed to fetch from YouTube API.");
+            return;
+          }
+
           if (searchData.items && searchData.items.length > 0) {
             const videoIds = searchData.items.map(i => i.id?.videoId).filter(Boolean).join(",");
 
@@ -281,6 +302,11 @@
               const statsUrl = `https://www.googleapis.com/youtube/v3/videos?key=${encodeURIComponent(apiKey.trim())}&id=${videoIds}&part=snippet,statistics,contentDetails`;
               const statsRes = await fetch(statsUrl);
               const statsData = await statsRes.json();
+
+              if (statsData.error) {
+                render(null, statsData.error.message);
+                return;
+              }
 
               if (statsData.items && statsData.items.length > 0) {
                 loadedVideos = statsData.items.map(item => ({
@@ -295,12 +321,16 @@
               }
             }
           }
+          render([]);
+          return;
         } catch (e) {
           console.error("YouTube API Fetch Error:", e);
+          render(null, e.message);
+          return;
         }
       }
 
-      // Fallback to Demo Mode Mock Data if key/channel missing or error occurs
+      // Fallback to Demo Mode Mock Data ONLY if key/channel missing
       loadedVideos = MOCK_VIDEOS.slice(0, parseInt(maxResults, 10));
       render(loadedVideos);
     }
