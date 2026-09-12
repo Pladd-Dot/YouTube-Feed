@@ -54,7 +54,7 @@ export default function App() {
     apiKey: activeProfile.apiKey || '',
     channelId: activeProfile.channelId || '',
     columns: 3,
-    maxResults: 6,
+    maxResults: 50,
     accentColor: '#6366f1',
     theme: 'dark',
     showSearch: true,

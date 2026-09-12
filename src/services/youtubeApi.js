@@ -106,7 +106,7 @@ function formatViews(viewsStr) {
 /**
  * Fetch videos from YouTube Data API v3 or return Mock Data
  */
-export async function fetchYouTubeFeed({ apiKey, channelId, maxResults = 6, query = "" }) {
+export async function fetchYouTubeFeed({ apiKey, channelId, maxResults = 50, query = "" }) {
   // If API key or channel ID is missing, fallback to Mock Data
   if (!apiKey || !apiKey.trim() || !channelId || !channelId.trim()) {
     console.log("Using Demo Mode Mock Data");

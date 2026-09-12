@@ -98,14 +98,14 @@ export default function ConfigPanel({
         <div className="form-group">
           <label className="form-label">Max Videos Displayed ({config.maxResults})</label>
           <div className="btn-group">
-            {[3, 6, 9, 12].map((num) => (
+            {[6, 12, 24, 50].map((num) => (
               <button
                 key={num}
                 type="button"
                 className={`btn-toggle ${config.maxResults === num ? 'active' : ''}`}
                 onClick={() => setConfig({ ...config, maxResults: num })}
               >
-                {num}
+                {num === 50 ? 'All (50)' : num}
               </button>
             ))}
           </div>

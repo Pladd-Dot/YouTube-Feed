@@ -37,7 +37,22 @@
       min-height: 100vh;
     }
 
-    /* Outer Container Frame */
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+    [data-theme='dark'] ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Outer Container Frame - Scrollable */
     .widget-container {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
@@ -47,10 +62,15 @@
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
+      max-height: 680px;
+      overflow-y: auto;
     }
 
     /* Search & Filter Header */
     .search-wrapper {
+      position: sticky;
+      top: 0;
+      z-index: 10;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -274,7 +294,7 @@
     const apiKey = params.get('key');
     const channelId = params.get('channel');
     const cols = params.get('cols') || '3';
-    const maxResults = params.get('max') || '6';
+    const maxResults = params.get('max') || '50';
     const theme = params.get('theme') || 'light';
     const color = params.get('color') ? decodeURIComponent(params.get('color')) : '#6366f1';
     const showSearch = params.get('search') !== '0';
@@ -377,7 +397,7 @@
     async function loadData() {
       if (apiKey && apiKey.trim() !== '' && channelId && channelId.trim() !== '' && channelId !== 'DEMO') {
         try {
-          // 1. Fetch channel videos via YouTube search endpoint
+          // 1. Fetch channel videos via YouTube search endpoint (up to 50 max results)
           const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${encodeURIComponent(apiKey.trim())}&channelId=${encodeURIComponent(channelId.trim())}&part=snippet,id&order=date&maxResults=${maxResults}&type=video`;
           const res = await fetch(searchUrl);
           const searchData = await res.json();
