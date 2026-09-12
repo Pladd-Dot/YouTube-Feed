@@ -295,34 +295,50 @@
           }
 
           if (searchData.items && searchData.items.length > 0) {
-            const videoIds = searchData.items.map(i => i.id?.videoId).filter(Boolean).join(",");
+            // Render channel videos IMMEDIATELY from search results
+            loadedVideos = searchData.items.map(item => ({
+              id: item.id?.videoId || item.id,
+              title: item.snippet?.title || "YouTube Video",
+              thumbnail: item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url,
+              views: new Date(item.snippet?.publishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+              duration: ""
+            })).filter(v => Boolean(v.id));
 
-            if (videoIds) {
-              // 2. Fetch video details (duration, views, high-res thumbnails)
-              const statsUrl = `https://www.googleapis.com/youtube/v3/videos?key=${encodeURIComponent(apiKey.trim())}&id=${videoIds}&part=snippet,statistics,contentDetails`;
-              const statsRes = await fetch(statsUrl);
-              const statsData = await statsRes.json();
+            render(loadedVideos);
 
-              if (statsData.error) {
-                render(null, statsData.error.message);
-                return;
+            // 2. Asynchronously fetch duration & statistics to enrich video cards
+            try {
+              const videoIds = loadedVideos.map(v => v.id).join(",");
+              if (videoIds) {
+                const statsUrl = `https://www.googleapis.com/youtube/v3/videos?key=${encodeURIComponent(apiKey.trim())}&id=${videoIds}&part=snippet,statistics,contentDetails`;
+                const statsRes = await fetch(statsUrl);
+                const statsData = await statsRes.json();
+
+                if (statsData.items && statsData.items.length > 0) {
+                  const statsMap = {};
+                  statsData.items.forEach(i => { statsMap[i.id] = i; });
+
+                  loadedVideos = loadedVideos.map(v => {
+                    const detail = statsMap[v.id];
+                    if (!detail) return v;
+                    return {
+                      ...v,
+                      thumbnail: detail.snippet?.thumbnails?.maxres?.url || detail.snippet?.thumbnails?.high?.url || v.thumbnail,
+                      views: formatViews(detail.statistics?.viewCount) || v.views,
+                      duration: parseDuration(detail.contentDetails?.duration)
+                    };
+                  });
+                  render(loadedVideos);
+                }
               }
-
-              if (statsData.items && statsData.items.length > 0) {
-                loadedVideos = statsData.items.map(item => ({
-                  id: item.id,
-                  title: item.snippet.title,
-                  thumbnail: item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
-                  views: formatViews(item.statistics?.viewCount) || new Date(item.snippet.publishedAt).toLocaleDateString(),
-                  duration: parseDuration(item.contentDetails?.duration)
-                }));
-                render(loadedVideos);
-                return;
-              }
+            } catch (statsErr) {
+              console.warn("Could not enrich stats, keeping base videos:", statsErr);
             }
+            return;
+          } else {
+            render([]);
+            return;
           }
-          render([]);
-          return;
         } catch (e) {
           console.error("YouTube API Fetch Error:", e);
           render(null, e.message);
