@@ -185,13 +185,16 @@
   <div id="player-modal" class="modal">
     <div class="modal-inner">
       <button class="modal-close" onclick="closeModal()">Close ✕</button>
-      <div className="modal-player" id="modal-player-box"></div>
+      <div class="modal-player" id="modal-player-box"></div>
     </div>
   </div>
 
   <script>
     const params = new URLSearchParams(window.location.search);
+    const apiKey = params.get('key');
+    const channelId = params.get('channel');
     const cols = params.get('cols') || '3';
+    const maxResults = params.get('max') || '6';
     const theme = params.get('theme') || 'dark';
     const color = params.get('color') ? decodeURIComponent(params.get('color')) : '#6366f1';
     const showSearch = params.get('search') !== '0';
@@ -217,26 +220,60 @@
       { id: "LDB4uaJ87e0", title: "Mastering REST APIs & Fetch / Axios in JavaScript", thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop", views: "98.4K views", duration: "21:10" }
     ];
 
+    let loadedVideos = [];
+
     function render(videos) {
+      if (!videos || videos.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">No videos found.</div>`;
+        return;
+      }
+
       grid.innerHTML = videos.map(v => `
         <div class="card" onclick="openModal('${v.id}')">
           <div class="thumb">
             <img src="${v.thumbnail}" alt="${v.title}">
-            ${showDuration ? `<span class="badge">${v.duration}</span>` : ''}
+            ${showDuration && v.duration ? `<span class="badge">${v.duration}</span>` : ''}
           </div>
           <div class="info">
             <h4 class="title">${v.title}</h4>
-            ${showViews ? `<div class="meta">${v.views}</div>` : ''}
+            ${showViews && v.views ? `<div class="meta">${v.views}</div>` : ''}
           </div>
         </div>
       `).join('');
     }
 
-    render(MOCK_VIDEOS);
+    async function loadData() {
+      if (apiKey && channelId && channelId.trim() !== '' && channelId !== 'DEMO') {
+        try {
+          const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${encodeURIComponent(apiKey.trim())}&channelId=${encodeURIComponent(channelId.trim())}&part=snippet,id&order=date&maxResults=${maxResults}&type=video`;
+          const res = await fetch(searchUrl);
+          const data = await res.json();
+          if (data.items && data.items.length > 0) {
+            loadedVideos = data.items.map(item => ({
+              id: item.id.videoId,
+              title: item.snippet.title,
+              thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
+              views: new Date(item.snippet.publishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+              duration: ""
+            }));
+            render(loadedVideos);
+            return;
+          }
+        } catch (e) {
+          console.error("YouTube API Fetch Error:", e);
+        }
+      }
+
+      // Fallback to Demo Mode Mock Data
+      loadedVideos = MOCK_VIDEOS.slice(0, parseInt(maxResults, 10));
+      render(loadedVideos);
+    }
+
+    loadData();
 
     document.getElementById('search-input').addEventListener('input', (e) => {
       const q = e.target.value.toLowerCase();
-      const filtered = MOCK_VIDEOS.filter(v => v.title.toLowerCase().includes(q));
+      const filtered = loadedVideos.filter(v => v.title.toLowerCase().includes(q));
       render(filtered);
     });
 
